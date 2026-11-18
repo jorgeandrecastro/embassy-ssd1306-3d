@@ -40,7 +40,7 @@ embassy-ssd1306-3d          ← this crate (3D → 2D)
 [dependencies]
 embassy-ssd1306-3d       = "0.2"
 embassy-ssd1306-graphics = "0.2"
-embedded-vector          = "0.1.0"
+embedded-vector          = "0.1"
 embassy-ssd1306          = "0.7"
 embedded-trig-f32        = "0.3"
 ```
