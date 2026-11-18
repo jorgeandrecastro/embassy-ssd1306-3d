@@ -6,6 +6,18 @@ Zero allocation · No unsafe code · Integer-friendly · Tested on RP2350 / read
 
 ---
 
+## RISC-V support
+
+This crate supports Embassy's RISC-V time backend through the `time-riscv` feature:
+
+```toml
+[dependencies]
+embassy-ssd1306-3d = { version = "0.2", default-features = false, features = ["time-riscv"] }
+embassy-ssd1306-graphics = { version = "0.2", default-features = false, features = ["time-riscv"] }
+```
+
+---
+
 ## Complete stack
 
 ```text

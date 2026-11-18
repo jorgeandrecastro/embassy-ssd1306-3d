@@ -1,27 +1,52 @@
+
 [package]
-name          = "embassy-ssd1306-3d"
-version       = "0.2.0"
-edition       = "2024"
-authors       = ["Jorge Andre Castro <georgeandrec@gmail.com>"]
-license       = "GPL-2.0-or-later"
-description   = "A no_std wireframe 3D engine for SSD1306 OLED displays"
-repository    = "https://github.com/jorgeandrecastro/embassy-ssd1306-3d"
+name = "embassy-ssd1306-3d"
+version = "0.2.1"
+edition = "2024"
+authors = ["Jorge Andre Castro <georgeandrec@gmail.com>"]
+license = "GPL-2.0-or-later"
+description = "A no_std wireframe 3D engine for SSD1306 OLED displays"
+repository = "https://github.com/jorgeandrecastro/embassy-ssd1306-3d"
 documentation = "https://docs.rs/embassy-ssd1306-3d"
-keywords      = ["embedded", "3d", "ssd1306", "no-std", "oled"]
-categories    = ["embedded", "no-std", "graphics"]
+keywords = ["embedded", "3d", "ssd1306", "no-std", "oled"]
+categories = ["embedded", "no-std", "graphics"]
 readme = "README.md"
 
+[features]
+default = ["time-upstream"]
+
+# Standard Embassy backend
+time-upstream = [
+    "embassy-ssd1306/time-upstream",
+    "embassy-ssd1306-graphics/time-upstream",
+]
+
+# RISC-V backend
+time-riscv = [
+    "embassy-ssd1306/time-riscv",
+    "embassy-ssd1306-graphics/time-riscv",
+]
+
 [dependencies]
-embassy-ssd1306-graphics = "0.2"
-embedded-vector          = "0.1" # Vec3
-embedded-matrix          = "0.3" # Matrix3x3 rotations
-embedded-trig-f32        = "0.3" # sine/cosine
-embassy-ssd1306          = "0.7"
-embedded-hal-async       = "1.0"
+embassy-ssd1306-graphics = {
+    version = "0.2.2",
+    default-features = false
+}
+
+embassy-ssd1306 = {
+    version = "0.7.2",
+    default-features = false
+}
+
+embedded-vector = { version = "0.1", default-features = false }
+embedded-matrix = { version = "0.3", default-features = false }
+embedded-trig-f32 = { version = "0.3", default-features = false }
+
+embedded-hal-async = { version = "1.0", default-features = false }
 
 [profile.release]
-opt-level     = "z"
-lto           = true
+opt-level = "z"
+lto = true
 codegen-units = 1
-panic         = "abort"
-strip         = true
+panic = "abort"
+strip = true
