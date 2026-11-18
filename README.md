@@ -1,15 +1,15 @@
 # embassy-ssd1306-3d
 
-Moteur 3D filaire `no_std` pour écrans OLED SSD1306 (128×64), construit au-dessus de [`embassy-ssd1306-graphics`](https://github.com/jorgeandrecastro/embassy-ssd1306-graphics).
+A `no_std` wireframe 3D engine for SSD1306 OLED displays (128×64), built on top of [`embassy-ssd1306-graphics`](https://github.com/jorgeandrecastro/embassy-ssd1306-graphics).
 
-Zéro allocation · Zéro unsafe · Integer-friendly · testée sur RP2350 / Cortex-M ready
+Zero allocation · No unsafe code · Integer-friendly · Tested on RP2350 / ready for Cortex-M
 
 ---
 
-## Stack complète
+## Complete stack
 
 ```text
-embassy-ssd1306-3d          ← ce crate (3D → 2D)
+embassy-ssd1306-3d          ← this crate (3D → 2D)
     ├── embassy-ssd1306-graphics   (line, circle, triangle…)
     ├── embedded-vector            (Vec3)
     ├── embedded-matrix            (Matrix3x3 rotations)
@@ -26,22 +26,23 @@ embassy-ssd1306-3d          ← ce crate (3D → 2D)
 
 ```toml
 [dependencies]
-embassy-ssd1306-3d       = "0.1.0"
-embassy-ssd1306-graphics = "0.1.0"
+embassy-ssd1306-3d       = "0.2"
+embassy-ssd1306-graphics = "0.2"
 embedded-vector          = "0.1.0"
-embassy-ssd1306          = "0.6.0"
+embassy-ssd1306          = "0.7"
+embedded-trig-f32        = "0.3"
 ```
 
 ---
 
-## Démarrage rapide
+## Quick start
 
 ```rust
 use embassy_ssd1306_3d::{cube, Camera, rotation_xyz};
 use embassy_ssd1306_graphics::Graphics;
 
-let cam  = Camera::new(64.0, 32.0, 80.0);  // cx, cy, focale
-let mesh = cube(18.0);                      // demi-côté 18 px
+let cam  = Camera::new(64.0, 32.0, 80.0);  // cx, cy, focal length
+let mesh = cube(18.0);                      // half-side length: 18 px
 
 loop {
     oled.clear();
@@ -57,7 +58,7 @@ loop {
 
 ---
 
-## Référence API
+## API reference
 
 ### `Camera`
 
@@ -65,40 +66,40 @@ loop {
 pub struct Camera { pub cx: f32, pub cy: f32, pub focal: f32 }
 ```
 
-Centre de projection + distance focale. Plus `focal` est grand, moins la perspective est marquée.
+Projection center and focal length. The larger `focal` is, the less pronounced the perspective.
 
 ```rust
-// Caméra centrée sur l'écran 128×64, focale standard
+// Camera centered on a 128×64 screen, with a standard focal length
 let cam = Camera::new(64.0, 32.0, 80.0);
 
-// Projection d'un point :  None si derrière la caméra
+// Project a point: None if it is behind the camera
 let screen: Option<(i32, i32)> = cam.project(&v);
 ```
 
-| `focal` | Effet visuel |
+| `focal` | Visual effect |
 |---------|-------------|
-| 40      | Très grand angle, perspective agressive |
-| 80      | Standard, équilibré |
-| 150     | Quasi-orthographique |
+| 40      | Very wide angle, strong perspective |
+| 80      | Standard, balanced |
+| 150     | Nearly orthographic |
 
 ---
 
 ### Rotations
 
 ```rust
-// Rotations élémentaires autour de chaque axe
+// Elementary rotations around each axis
 let rx = rotation_x(angle);
 let ry = rotation_y(angle);
 let rz = rotation_z(angle);
 
-// Rotation combinée Rx · Ry · Rz (usage le plus courant)
+// Combined rotation Rx · Ry · Rz (most common use)
 let rot = rotation_xyz(ax, ay, az);
 ```
 
-Les matrices sont des [`Matrix3x3`](https://docs.rs/embedded-matrix) et se composent avec `*` :
+The matrices are [`Matrix3x3`](https://docs.rs/embedded-matrix) values and can be composed with `*`:
 
 ```rust
-// Rotation personnalisée : d'abord Y, puis Z
+// Custom rotation: first Y, then Z
 let rot = rotation_y(ay) * rotation_z(az);
 ```
 
@@ -110,7 +111,7 @@ let rot = rotation_y(ay) * rotation_z(az);
 pub fn transform(v: &Vec3, m: &Matrix3x3) -> Vec3
 ```
 
-Applique une rotation à un `Vec3`. Fonction libre car `embedded-vector` et `embedded-matrix` ne se connaissent pas (règle orphan Rust).
+Applies a rotation to a `Vec3`. This is a free function because `embedded-vector` and `embedded-matrix` do not know about each other (the Rust orphan rule).
 
 ```rust
 let v_world = transform(&Vec3::new(10.0, 0.0, 0.0), &rotation_y(angle));
@@ -127,21 +128,21 @@ pub struct Mesh<const V: usize, const E: usize> {
 }
 ```
 
-Tailles connues à la compilation — aucun `Vec`, aucun heap.
+Sizes are known at compile time — no `Vec`, no heap allocation.
 
 ```rust
-// Dessin filaire complet en une ligne
+// Draw the complete wireframe in one line
 mesh.draw_wireframe(&mut gfx, &cam, &rot);
 ```
 
-**Maillages fournis :**
+**Built-in meshes:**
 
-| Fonction | Sommets | Arêtes | Description |
-|----------|---------|--------|-------------|
-| `cube(s)` | 8 | 12 | Cube, demi-côté `s` |
-| `pyramid(base, height)` | 5 | 8 | Pyramide à base carrée |
-| `octahedron(r)` | 6 | 12 | Octaèdre régulier |
-| `icosahedron(r)` | 12 | 30 | Icosaèdre (ratio doré φ) |
+| Function | Vertices | Edges | Description |
+|----------|---------|-------------|-------------|
+| `cube(s)` | 8 | 12 | Cube, half-side length `s` |
+| `pyramid(base, height)` | 5 | 8 | Square-based pyramid |
+| `octahedron(r)` | 6 | 12 | Regular octahedron |
+| `icosahedron(r)` | 12 | 30 | Icosahedron (golden ratio φ) |
 
 ```rust
 let c = cube(18.0);
@@ -152,13 +153,13 @@ let i = icosahedron(16.0);
 
 ---
 
-### Maillage personnalisé
+### Custom mesh
 
 ```rust
 use embedded_vector::Vec3;
 use embassy_ssd1306_3d::{Mesh, Edge};
 
-// Tétraèdre : 4 sommets, 6 arêtes
+// Tetrahedron: 4 vertices, 6 edges
 let tetra: Mesh<4, 6> = Mesh {
     vertices: [
         Vec3::new( 0.0,  20.0,  0.0),
@@ -175,7 +176,7 @@ let tetra: Mesh<4, 6> = Mesh {
 
 ---
 
-## Exemple complet  rotation multi-objets
+## Complete example: multi-object rotation
 
 ```rust
 #![no_std]
@@ -251,7 +252,7 @@ async fn main(_spawner: Spawner) {
 
 ---
 
-## Architecture interne
+## Internal architecture
 
 ```text
 draw_wireframe()
@@ -259,17 +260,17 @@ draw_wireframe()
     ├── transform(v, rot)        embedded-vector × embedded-matrix
     │       └── Matrix3x3 · Vec3
     │
-    ├── cam.project(v_world)     projection perspective f32 → (i32, i32)
-    │       └── None si Z + focal ≤ 0  (clipping caméra)
+    ├── cam.project(v_world)     perspective projection f32 → (i32, i32)
+    │       └── None if Z + focal ≤ 0 (camera clipping)
     │
     └── line(gfx, x0, y0, x1, y1, true)
-            └── embassy-ssd1306-graphics  (Bresenham integer-only)
+            └── embassy-ssd1306-graphics (integer-only Bresenham)
                     └── oled.draw_pixel()
-                            └── framebuffer SSD1306
+                            └── SSD1306 framebuffer
 ```
 
 ---
 
-## Licence
+## License
 
 GPL-2.0-or-later — Jorge Andre Castro

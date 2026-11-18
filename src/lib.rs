@@ -2,11 +2,11 @@
 #![forbid(unsafe_code)]
 //! # embassy-ssd1306-3d
 //!
-//! Moteur 3D filaire `no_std` pour écrans OLED SSD1306 (128×64).
+//! A `no_std` wireframe 3D engine for SSD1306 OLED displays (128×64).
 //!
-//! Utilise [`embedded_vector::Vec3`] pour les sommets,
-//! [`embedded_matrix::Matrix3x3`] pour les rotations,
-//! et [`embedded_trig_f32`] pour sin/cos.
+//! Uses [`embedded_vector::Vec3`] for vertices,
+//! [`embedded_matrix::Matrix3x3`] for rotations,
+//! and [`embedded_trig_f32`] for sine and cosine.
 //!
 //! ## Pipeline
 //!
@@ -14,7 +14,7 @@
 //! Vec3 → Matrix3x3 (rotation) → Camera::project() → (i32, i32) → line()
 //! ```
 //!
-//! ## Exemple minimal
+//! ## Minimal example
 //!
 //! ```rust,no_run
 //! use embedded_vector::Vec3;
@@ -41,13 +41,13 @@ use embedded_trig_f32::{cos, sin};
 use embedded_vector::Vec3;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Transformation Vec3 × Matrix3x3
+// Vec3 × Matrix3x3 transformation
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Applique une rotation `Matrix3x3` à un `Vec3`.
+/// Applies a `Matrix3x3` rotation to a `Vec3`.
 ///
-/// `embedded-vector` ne dépend pas d'`embedded-matrix`, donc on fournit
-/// cette fonction libre plutôt que d'implémenter un trait externe.
+/// `embedded-vector` does not depend on `embedded-matrix`, so this free
+/// function is provided instead of implementing a foreign trait.
 #[inline]
 pub fn transform(v: &Vec3, m: &Matrix3x3) -> Vec3 {
     Vec3::new(
@@ -58,10 +58,10 @@ pub fn transform(v: &Vec3, m: &Matrix3x3) -> Vec3 {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Matrices de rotation
+// Rotation matrices
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Rotation autour de l'axe X.
+/// Rotation around the X axis.
 pub fn rotation_x(a: f32) -> Matrix3x3 {
     Matrix3x3::new([
         [1.0,    0.0,     0.0],
@@ -70,7 +70,7 @@ pub fn rotation_x(a: f32) -> Matrix3x3 {
     ])
 }
 
-/// Rotation autour de l'axe Y.
+/// Rotation around the Y axis.
 pub fn rotation_y(a: f32) -> Matrix3x3 {
     Matrix3x3::new([
         [ cos(a), 0.0, sin(a)],
@@ -79,7 +79,7 @@ pub fn rotation_y(a: f32) -> Matrix3x3 {
     ])
 }
 
-/// Rotation autour de l'axe Z.
+/// Rotation around the Z axis.
 pub fn rotation_z(a: f32) -> Matrix3x3 {
     Matrix3x3::new([
         [cos(a), -sin(a), 0.0],
@@ -95,13 +95,13 @@ pub fn rotation_xyz(ax: f32, ay: f32, az: f32) -> Matrix3x3 {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Caméra projection perspective
+// Perspective camera projection
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Caméra perspective centrée sur l'écran 128×64.
+/// Perspective camera centered on a 128×64 screen.
 ///
-/// Projection : `sx = cx + focal * X / (Z + focal)`.
-/// Retourne `None` si le point est derrière le plan caméra (`Z + focal ≤ 0`).
+/// Projection: `sx = cx + focal * X / (Z + focal)`.
+/// Returns `None` if the point is behind the camera plane (`Z + focal ≤ 0`).
 pub struct Camera {
     pub cx:    f32,
     pub cy:    f32,
@@ -114,7 +114,7 @@ impl Camera {
         Self { cx, cy, focal }
     }
 
-    /// Projette un [`Vec3`] en pixel `(x, y)`.
+    /// Projects a [`Vec3`] to pixel coordinates `(x, y)`.
     #[inline]
     pub fn project(&self, v: &Vec3) -> Option<(i32, i32)> {
         let dz = v.z + self.focal;
@@ -132,7 +132,7 @@ impl Camera {
 // Edge
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Arête reliant deux sommets par leur indice dans `Mesh::vertices`.
+/// An edge connecting two vertices by their index in `Mesh::vertices`.
 #[derive(Clone, Copy)]
 pub struct Edge(pub usize, pub usize);
 
@@ -140,19 +140,19 @@ pub struct Edge(pub usize, pub usize);
 // Mesh
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Maillage 3D filaire tableaux de taille fixe, zéro allocation.
+/// A wireframe 3D mesh with fixed-size arrays and zero allocations.
 ///
-/// `V` = nombre de sommets, `E` = nombre d'arêtes.
+/// `V` = number of vertices, `E` = number of edges.
 pub struct Mesh<const V: usize, const E: usize> {
     pub vertices: [Vec3; V],
     pub edges:    [Edge; E],
 }
 
 impl<const V: usize, const E: usize> Mesh<V, E> {
-    /// Dessine le maillage filaire.
+    /// Draws the wireframe mesh.
     ///
-    /// Projette tous les sommets via `transform` + `cam.project()`,
-    /// puis trace chaque arête visible avec [`line()`].
+    /// Projects all vertices using `transform` + `cam.project()`,
+    /// then draws each visible edge using [`line()`].
     pub fn draw_wireframe<I: I2c>(
         &self,
         gfx: &mut Graphics<'_, I>,
@@ -174,10 +174,10 @@ impl<const V: usize, const E: usize> Mesh<V, E> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Primitives 3D
+// 3D primitives
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Cube centré à l'origine, demi-côté `s`. (8 sommets, 12 arêtes)
+/// Cube centered at the origin, with a half-side length of `s`. (8 vertices, 12 edges)
 pub fn cube(s: f32) -> Mesh<8, 12> {
     Mesh {
         vertices: [
@@ -191,14 +191,14 @@ pub fn cube(s: f32) -> Mesh<8, 12> {
             Vec3::new(-s,  s,  s), // 7
         ],
         edges: [
-            Edge(0,1), Edge(1,2), Edge(2,3), Edge(3,0), // face arrière
-            Edge(4,5), Edge(5,6), Edge(6,7), Edge(7,4), // face avant
-            Edge(0,4), Edge(1,5), Edge(2,6), Edge(3,7), // arêtes latérales
+            Edge(0,1), Edge(1,2), Edge(2,3), Edge(3,0), // back face
+            Edge(4,5), Edge(5,6), Edge(6,7), Edge(7,4), // front face
+            Edge(0,4), Edge(1,5), Edge(2,6), Edge(3,7), // side edges
         ],
     }
 }
 
-/// Pyramide à base carrée. (5 sommets, 8 arêtes)
+/// Square-based pyramid. (5 vertices, 8 edges)
 pub fn pyramid(base: f32, height: f32) -> Mesh<5, 8> {
     let h2 = height / 2.0;
     Mesh {
@@ -207,16 +207,16 @@ pub fn pyramid(base: f32, height: f32) -> Mesh<5, 8> {
             Vec3::new( base, -base, -h2), // 1
             Vec3::new( base,  base, -h2), // 2
             Vec3::new(-base,  base, -h2), // 3
-            Vec3::new(  0.0,   0.0,  h2), // 4 sommet
+            Vec3::new(  0.0,   0.0,  h2), // 4 apex
         ],
         edges: [
             Edge(0,1), Edge(1,2), Edge(2,3), Edge(3,0), // base
-            Edge(0,4), Edge(1,4), Edge(2,4), Edge(3,4), // arêtes montantes
+            Edge(0,4), Edge(1,4), Edge(2,4), Edge(3,4), // rising edges
         ],
     }
 }
 
-/// Octaèdre régulier de rayon `r`. (6 sommets, 12 arêtes)
+/// Regular octahedron with radius `r`. (6 vertices, 12 edges)
 pub fn octahedron(r: f32) -> Mesh<6, 12> {
     Mesh {
         vertices: [
@@ -235,9 +235,9 @@ pub fn octahedron(r: f32) -> Mesh<6, 12> {
     }
 }
 
-/// Icosaèdre régulier approximé. (12 sommets, 30 arêtes)
+/// Approximation of a regular icosahedron. (12 vertices, 30 edges)
 ///
-/// Utilise le ratio doré φ ≈ 1.618 pour placer les sommets.
+/// Uses the golden ratio φ ≈ 1.618 to position the vertices.
 pub fn icosahedron(r: f32) -> Mesh<12, 30> {
     let phi = 1.618_034 * r;
     let one = r;

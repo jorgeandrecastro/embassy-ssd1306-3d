@@ -1,20 +1,22 @@
 [package]
 name          = "embassy-ssd1306-3d"
-version       = "0.1.0"
+version       = "0.2.0"
 edition       = "2024"
 authors       = ["Jorge Andre Castro <georgeandrec@gmail.com>"]
 license       = "GPL-2.0-or-later"
-description   = "Moteur 3D filaire no_std pour écrans OLED SSD1306"
+description   = "A no_std wireframe 3D engine for SSD1306 OLED displays"
 repository    = "https://github.com/jorgeandrecastro/embassy-ssd1306-3d"
+documentation = "https://docs.rs/embassy-ssd1306-3d"
 keywords      = ["embedded", "3d", "ssd1306", "no-std", "oled"]
 categories    = ["embedded", "no-std", "graphics"]
+readme = "README.md"
 
 [dependencies]
-embassy-ssd1306-graphics = "0.1.0"
-embedded-vector          = "0.1.0"   # Vec3 
-embedded-matrix          = "0.1.0"   # Matrix3x3 rotations
-embedded-trig-f32        = "0.1.0"   # sin/cos
-embassy-ssd1306          = "0.6.0"
+embassy-ssd1306-graphics = "0.2"
+embedded-vector          = "0.1" # Vec3
+embedded-matrix          = "0.3" # Matrix3x3 rotations
+embedded-trig-f32        = "0.3" # sine/cosine
+embassy-ssd1306          = "0.7"
 embedded-hal-async       = "1.0"
 
 [profile.release]
